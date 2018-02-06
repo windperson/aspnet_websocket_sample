@@ -16,6 +16,9 @@ namespace EchoApp
 {
     public class Startup
     {
+        private ILogger _logger;
+
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit http://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -28,6 +31,7 @@ namespace EchoApp
         {
             loggerFactory.AddConsole(LogLevel.Debug);
             loggerFactory.AddDebug(LogLevel.Debug);
+            _logger = loggerFactory.CreateLogger<Startup>();
 
             if (env.IsDevelopment())
             {
@@ -70,22 +74,23 @@ namespace EchoApp
                 }
 
             });
-#endregion
+            #endregion
             app.UseFileServer();
         }
-#region Echo
+        #region Echo
         private async Task Echo(HttpContext context, WebSocket webSocket)
         {
             var buffer = new byte[1024 * 4];
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             while (!result.CloseStatus.HasValue)
             {
+                _logger.LogDebug($"buffer={buffer}");
                 await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
 
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             }
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
-#endregion
+        #endregion
     }
 }
