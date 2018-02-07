@@ -18,7 +18,6 @@ namespace EchoApp
     {
         private ILogger _logger;
 
-
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit http://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
@@ -29,8 +28,9 @@ namespace EchoApp
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddConsole(LogLevel.Debug);
-            loggerFactory.AddDebug(LogLevel.Debug);
+            //for System.Encoding.GetEncoding() to work.
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             _logger = loggerFactory.CreateLogger<Startup>();
 
             if (env.IsDevelopment())
@@ -72,7 +72,6 @@ namespace EchoApp
                 {
                     await next();
                 }
-
             });
             #endregion
             app.UseFileServer();
@@ -84,7 +83,7 @@ namespace EchoApp
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             while (!result.CloseStatus.HasValue)
             {
-                _logger.LogDebug($"buffer={buffer}");
+                _logger.LogInformation("buffer= {@buffer}", GetReadableString(buffer));
                 await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
 
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
@@ -92,5 +91,13 @@ namespace EchoApp
             await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
         }
         #endregion
+
+        private string GetReadableString(byte[] buffer)
+        {
+            var nullStart = Array.IndexOf(buffer, (byte)0);
+            nullStart = (nullStart == -1) ? buffer.Length : nullStart;
+            var ret = Encoding.Default.GetString(buffer, 0, nullStart);
+            return ret;
+        }
     }
 }
