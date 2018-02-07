@@ -83,7 +83,8 @@ namespace EchoApp
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             while (!result.CloseStatus.HasValue)
             {
-                _logger.LogInformation("buffer= {@buffer}", GetReadableString(buffer));
+                var structedBuffer = new MyStructedLog() { Buffer = GetReadableString(buffer) };
+                _logger.LogInformation("buffer= {@1}", structedBuffer);
                 await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
 
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
