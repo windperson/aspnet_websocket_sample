@@ -62,6 +62,7 @@ namespace EchoApp
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         await Echo(context, webSocket);
+                        //await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,"say goodbye",new CancellationToken());
                     }
                     else
                     {
@@ -81,11 +82,18 @@ namespace EchoApp
         {
             var buffer = new byte[1024 * 4];
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
             while (!result.CloseStatus.HasValue)
             {
-                var structedBuffer = new MyStructedLog() { Buffer = GetReadableString(buffer) };
+                var receiveStr = GetReadableString(buffer);
+
+                var structedBuffer = new MyStructedLog() { Buffer = receiveStr  };
                 _logger.LogInformation("buffer= {@1}", structedBuffer);
-                await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
+
+                var sendStr = $"{{\"recv\": \"{receiveStr}\"}}";
+                var sendBuffer = StringToByteArray(sendStr);
+
+                await webSocket.SendAsync(new ArraySegment<byte>(sendBuffer, 0, sendBuffer.Count()), result.MessageType, true, CancellationToken.None);
 
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             }
@@ -99,6 +107,11 @@ namespace EchoApp
             nullStart = (nullStart == -1) ? buffer.Length : nullStart;
             var ret = Encoding.Default.GetString(buffer, 0, nullStart);
             return ret;
+        }
+
+        private byte[] StringToByteArray(string source)
+        {
+            return Encoding.Default.GetBytes(source);
         }
     }
 }
