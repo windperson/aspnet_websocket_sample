@@ -6,6 +6,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using aspnet_websocket_sample.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -37,6 +38,9 @@ namespace EchoApp
             {
                 app.UseDeveloperExceptionPage();
             }
+            
+            app.UseLogRequest();
+            app.UseLogResponse();
 
 #if NoOptions
             #region UseWebSockets
@@ -62,7 +66,6 @@ namespace EchoApp
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         await Echo(context, webSocket);
-                        //await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure,"say goodbye",new CancellationToken());
                     }
                     else
                     {
