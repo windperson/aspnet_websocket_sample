@@ -15,16 +15,19 @@ namespace EchoApp
         public static void Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Log.Logger = new LoggerConfiguration().WriteTo.LiterateConsole().CreateLogger();
-            var host = new WebHostBuilder()
-                .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
-                .UseSerilog()
-                .UseStartup<Startup>()
+            Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+            var host = CreateWebHostBuilder(args)
                 .Build();
 
             host.Run();
         }
+
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+            new WebHostBuilder()
+            .UseKestrel()
+            .UseContentRoot(Directory.GetCurrentDirectory())
+            .UseIISIntegration()
+            .UseSerilog()
+            .UseStartup<Startup>();
     }
 }

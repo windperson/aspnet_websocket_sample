@@ -38,6 +38,10 @@ namespace EchoApp
             {
                 app.UseDeveloperExceptionPage();
             }
+            
+            //enable HTTPS
+            app.UseHsts();
+            app.UseHttpsRedirection();
 
             app.UseLogRequest();
             app.UseLogResponse();
@@ -90,7 +94,7 @@ namespace EchoApp
             {
                 var receiveStr = GetReadableString(buffer);
 
-                var structedBuffer = new MyStructedLog() { Buffer = receiveStr };
+                var structedBuffer = new MyStructedLog() { Buffer = receiveStr  };
                 _logger.LogInformation("buffer= {@1}", structedBuffer);
 
                 var sendStr = $"{{\"recv\": \"{receiveStr}\"}}";
