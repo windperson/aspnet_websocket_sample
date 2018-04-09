@@ -42,7 +42,7 @@ namespace EchoApp
             {
                 app.UseHsts();
             }
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseLogRequest();
             app.UseLogResponse();
