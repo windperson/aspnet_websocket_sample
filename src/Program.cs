@@ -16,7 +16,12 @@ namespace EchoApp
         public static void Main(string[] args)
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.Trace()
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
             var host = CreateWebHostBuilder(args)
                 .Build();
 

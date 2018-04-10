@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace EchoApp
 {
@@ -42,10 +44,10 @@ namespace EchoApp
             {
                 app.UseHsts();
             }
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
 
             app.UseLogRequest();
-            app.UseLogResponse();
+            //app.UseLogResponse();
 
 #if NoOptions
             #region UseWebSockets

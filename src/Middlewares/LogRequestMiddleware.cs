@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,10 +28,20 @@ namespace aspnet_websocket_sample.Middlewares
             var requestBody = await (new StreamReader(requestBodyStream)).ReadToEndAsync();
             var headers = context.Request.Headers.ToDictionary(k => k.Key, v => v.Value.ToString());
 
+            string url = string.Empty;
+            try
+            {
+                url = context.Request.GetDisplayUrl();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "try to get request URL failed");
+            }
+
             var logRequest = new
             {
                 METHOD = context.Request.Method,
-                URL = context.Request.GetDisplayUrl(),
+                URL = url,
                 Header = headers,
                 Body = requestBody
             };
