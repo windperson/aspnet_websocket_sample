@@ -1,6 +1,4 @@
-﻿#define UseOptions // or NoOptions
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
@@ -12,8 +10,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Serilog;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace EchoApp
 {
@@ -47,14 +43,8 @@ namespace EchoApp
             app.UseHttpsRedirection();
 
             app.UseLogRequest();
-            //app.UseLogResponse();
+            app.UseLogResponse();
 
-#if NoOptions
-            #region UseWebSockets
-            app.UseWebSockets();
-            #endregion
-#endif
-#if UseOptions
             #region UseWebSocketsOptions
             var webSocketOptions = new WebSocketOptions()
             {
@@ -63,7 +53,7 @@ namespace EchoApp
             };
             app.UseWebSockets(webSocketOptions);
             #endregion
-#endif
+
             #region AcceptWebSocket
             app.Use(async (context, next) =>
             {

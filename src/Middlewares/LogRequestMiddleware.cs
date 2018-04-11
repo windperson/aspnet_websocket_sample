@@ -28,7 +28,7 @@ namespace aspnet_websocket_sample.Middlewares
             var requestBody = await (new StreamReader(requestBodyStream)).ReadToEndAsync();
             var headers = context.Request.Headers.ToDictionary(k => k.Key, v => v.Value.ToString());
 
-            string url = string.Empty;
+            var url = string.Empty;
             try
             {
                 url = context.Request.GetDisplayUrl();
@@ -50,7 +50,7 @@ namespace aspnet_websocket_sample.Middlewares
 
             requestBodyStream.Seek(0, SeekOrigin.Begin);
             context.Request.Body = requestBodyStream;
-            await _next(context);
+            await _next.Invoke(context);
             if (context.WebSockets.IsWebSocketRequest)
             {
                 _logger.LogInformation("Incoming connection is a websocket connction request");

@@ -11,8 +11,8 @@ namespace aspnet_websocket_sample.Middlewares
     //example inspired from: http://www.sulhome.com/blog/10/log-asp-net-core-request-and-response-using-middleware
     public class LogResponseMiddleware
     {
-        private RequestDelegate _next;
-        private ILogger<LogResponseMiddleware> _logger;
+        private readonly RequestDelegate _next;
+        private readonly ILogger<LogResponseMiddleware> _logger;
 
         public LogResponseMiddleware(RequestDelegate next, ILogger<LogResponseMiddleware> logger)
         {
@@ -22,35 +22,38 @@ namespace aspnet_websocket_sample.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
-            var originSteam = context.Response.Body;
-            var memoryStream = new MemoryStream();
-            context.Response.Body = memoryStream;
-
-            await _next(context);
             if (context.WebSockets.IsWebSocketRequest)
             {
                 _logger.LogInformation("don't log websocket connction response");
-                context.Response.Body = originSteam;
+                await _next.Invoke(context);
                 return;
             }
 
-            memoryStream.Seek(0, SeekOrigin.Begin);
-            var responseBodyStr = await (new StreamReader(memoryStream)).ReadToEndAsync();
-            var headers = context.Response.Headers.ToDictionary(k => k.Key, v => v.Value.ToString());
-            var logResponse = new
+            using (var memoryStream = new MemoryStream())
             {
-                URL = context.Request.GetDisplayUrl(),
-                STATUS = context.Response.StatusCode,
-                Header = headers,
-                Body = responseBodyStr
-            };
+                var originSteam = context.Response.Body;
+                context.Response.Body = memoryStream;
 
-            _logger.LogInformation("{@LogResponse}", logResponse);
-            
-            if(StatusCanHaveBody(context.Response.StatusCode))
-            {
+                await _next.Invoke(context);
+
                 memoryStream.Seek(0, SeekOrigin.Begin);
-                await memoryStream.CopyToAsync(originSteam);
+                var responseBodyStr = await (new StreamReader(memoryStream)).ReadToEndAsync();
+                var headers = context.Response.Headers.ToDictionary(k => k.Key, v => v.Value.ToString());
+                var logResponse = new
+                {
+                    URL = context.Request.GetDisplayUrl(),
+                    STATUS = context.Response.StatusCode,
+                    Header = headers,
+                    Body = responseBodyStr
+                };
+
+                _logger.LogInformation("{@LogResponse}", logResponse);
+
+                if (StatusCanHaveBody(context.Response.StatusCode))
+                {
+                    memoryStream.Seek(0, SeekOrigin.Begin);
+                    await memoryStream.CopyToAsync(originSteam);
+                }
             }
         }
 
