@@ -10,6 +10,16 @@
                 "${workspaceFolder}/src/EchoApp.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build test",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/test/EchoAppTest/EchoAppTest.csproj"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
 }
