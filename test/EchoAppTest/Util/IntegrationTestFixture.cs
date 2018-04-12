@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace EchoAppTest.Util
 {
@@ -19,10 +20,17 @@ namespace EchoAppTest.Util
 
 
         public IntegrationTestFixture() : this(Path.Combine("src"))
-        { }
+        {
+        }
 
         protected IntegrationTestFixture(string testProjectParaentDir)
         {
+            Log.Logger = new LoggerConfiguration()
+                .WriteTo.Console()
+                .WriteTo.Trace()
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
             var startupAssembly = typeof(TStartup).GetTypeInfo().Assembly;
             var appRoot = GetProjectPath(testProjectParaentDir, startupAssembly);
 
@@ -30,6 +38,7 @@ namespace EchoAppTest.Util
                 .UseContentRoot(appRoot)
                 .ConfigureServices(InitializeServices)
                 .UseEnvironment("Development")
+                .UseSerilog()
                 .UseStartup(typeof(TStartup));
 
             _server = new TestServer(builder);

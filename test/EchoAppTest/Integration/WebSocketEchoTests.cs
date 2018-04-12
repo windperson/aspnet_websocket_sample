@@ -15,7 +15,7 @@ namespace EchoAppTest.Integration
 {
     public class WebSocketEchoTests : IClassFixture<IntegrationTestFixture<Startup>>
     {
-        readonly ILogger _output;
+        private readonly ILogger _output;
 
         private readonly WebSocketClient _webSocketClient;
 
