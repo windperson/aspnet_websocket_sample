@@ -23,7 +23,7 @@ namespace EchoAppTest.Util
         {
         }
 
-        protected IntegrationTestFixture(string testProjectParaentDir)
+        protected IntegrationTestFixture(string underTestProjectParaentDir)
         {
             Log.Logger = new LoggerConfiguration()
                 .WriteTo.Console()
@@ -32,7 +32,7 @@ namespace EchoAppTest.Util
                 .CreateLogger();
 
             var startupAssembly = typeof(TStartup).GetTypeInfo().Assembly;
-            var appRoot = GetProjectPath(testProjectParaentDir, startupAssembly);
+            var appRoot = GetProjectPath(underTestProjectParaentDir, startupAssembly);
 
             var builder = new WebHostBuilder()
                 .UseContentRoot(appRoot)
