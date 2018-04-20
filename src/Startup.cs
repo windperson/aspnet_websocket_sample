@@ -40,6 +40,7 @@ namespace EchoApp
             {
                 app.UseHsts();
             }
+
             app.UseHttpsRedirection();
 
             app.UseLogRequest();
@@ -75,7 +76,9 @@ namespace EchoApp
                 }
             });
             #endregion
+
             app.UseFileServer();
+
         }
         #region Echo
         private async Task Echo(HttpContext context, WebSocket webSocket)
