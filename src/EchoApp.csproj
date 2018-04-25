@@ -4,9 +4,12 @@
     <GenerateFullPaths>true</GenerateFullPaths>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <PlatformTarget>x86</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="MassTransit" Version="5.0.1" />
+    <PackageReference Include="MassTransit.Extensions.DependencyInjection" Version="5.0.1" />
+    <PackageReference Include="MassTransit.SerilogIntegration" Version="5.0.1" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.1.0-preview2-final" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.1.0-preview2-final" />
