@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,7 +35,14 @@ namespace aspnet_websocket_sample.Middlewares
                 var originSteam = context.Response.Body;
                 context.Response.Body = memoryStream;
 
-                await _next.Invoke(context);
+                try
+                {
+                    await _next.Invoke(context);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "log response middleware call chained middleware(s) error");
+                }
 
                 memoryStream.Seek(0, SeekOrigin.Begin);
                 var responseBodyStr = await (new StreamReader(memoryStream)).ReadToEndAsync();

@@ -50,7 +50,16 @@ namespace aspnet_websocket_sample.Middlewares
 
             requestBodyStream.Seek(0, SeekOrigin.Begin);
             context.Request.Body = requestBodyStream;
-            await _next.Invoke(context);
+
+            try
+            {
+                await _next.Invoke(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "log request middleware call chained middleware(s) error");
+            }
+            
             if (context.WebSockets.IsWebSocketRequest)
             {
                 _logger.LogInformation("Incoming connection is a websocket connction request");
