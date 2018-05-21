@@ -92,9 +92,13 @@ namespace EchoApp
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
 
+                        var myHandler = bus.ConnectHandler<YourMessage>(MyHandler);
+
                         var sendPoint = await bus.GetSendEndpoint(new Uri($"loopback://localhost/{QueueName}"));
 
                         await Echo(context, webSocket, sendPoint);
+
+                        myHandler.Disconnect();
                     }
                     else
                     {
@@ -110,6 +114,13 @@ namespace EchoApp
 
             app.UseFileServer();
 
+        }
+
+        private Task MyHandler(ConsumeContext<YourMessage> context)
+        {
+            var yourmsg = context.Message;
+            _logger.LogInformation("In MyHandler, YourMessage: {@1}", yourmsg);
+            return Task.CompletedTask;
         }
 
         private void ConfigInMemoryBus(IInMemoryBusFactoryConfigurator configurator)
