@@ -15,17 +15,25 @@ namespace EchoApp
     {
         public static void Main(string[] args)
         {
-            Console.OutputEncoding = System.Text.Encoding.UTF8;
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .WriteTo.Trace()
-                .Enrich.FromLogContext()
-                .CreateLogger();
+            try
+            {
+                Console.OutputEncoding = System.Text.Encoding.UTF8;
+                Log.Logger = new LoggerConfiguration()
+                    .WriteTo.Console()
+                    .WriteTo.Trace()
+                    .Enrich.FromLogContext()
+                    .CreateLogger();
 
-            var host = CreateWebHostBuilder(args)
-                .Build();
+                var host = CreateWebHostBuilder(args)
+                    .Build();
 
-            host.Run();
+                host.Run();
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Fatal(ex, "start failed");
+            }
+            
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>

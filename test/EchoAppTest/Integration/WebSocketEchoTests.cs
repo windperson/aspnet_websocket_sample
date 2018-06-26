@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using EchoApp;
 using EchoAppTest.Util;
 using Microsoft.AspNetCore.TestHost;
+using Newtonsoft.Json;
 using Serilog;
 using Xunit;
 using Xunit.Abstractions;
@@ -33,11 +34,19 @@ namespace EchoAppTest.Integration
         {
             //Arrange
             var socket = await _webSocketClient.ConnectAsync(new Uri("https://localhost/ws"), CancellationToken.None);
-            var helloStr = "hello";
-            var hello = Encoding.UTF8.GetBytes(helloStr);
-            var recvBuffer = new byte[1024 * 4];
+
+            const string helloStr = "hello";
+            var invocationId = DateTime.Now.ToString("yyyy-MM-dd_HH:mm:ss.ff");
+            var hello = CreateServerEchoInvocation(invocationId, helloStr);
+            var handshakeBuffer = new byte[1024 * 2];
+            var recvBuffer = new byte[1024 * 2];
 
             //Act
+            await socket.SendAsync(new ArraySegment<byte>(GenerateHandShakMsg()), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
+            await socket.ReceiveAsync(new ArraySegment<byte>(handshakeBuffer), CancellationToken.None);
+            var handShakeResult = GetReadableStringFromSignalrJsonPayload(handshakeBuffer);
+            Assert.Equal("{}", handShakeResult);
+
             await socket.SendAsync(new ArraySegment<byte>(hello), WebSocketMessageType.Text, true, CancellationToken.None);
             var result = await socket.ReceiveAsync(recvBuffer, CancellationToken.None);
             await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "end test", CancellationToken.None);
@@ -45,17 +54,52 @@ namespace EchoAppTest.Integration
             //Assert
             Assert.Equal(WebSocketMessageType.Text, result.MessageType);
             Assert.True(result.Count > 0);
-            var recvStr = GetReadableString(recvBuffer);
+            var recvStr = GetReadableStringFromSignalrJsonPayload(recvBuffer);
             _output.Information("receive={0}", recvStr);
-            Assert.Equal($"{{\"recv\": \"{helloStr}\"}}", recvStr);
+
+            var rpcResult = JsonConvert.DeserializeObject<SignalRpcResult>(recvStr);
+
+            Assert.Equal(3, rpcResult.Type);
+            Assert.Equal(invocationId, rpcResult.InvocationId);
+            Assert.Equal($"\"{{\\\"recv\\\": \\\"{helloStr}\\\"}}\"", JsonConvert.SerializeObject(rpcResult.Result));
         }
 
-        private string GetReadableString(byte[] buffer)
+        public class SignalRpcResult
         {
-            var nullStart = Array.IndexOf(buffer, (byte)0);
+            public int Type { get; set; }
+            public string InvocationId { get; set; }
+            public Object Result { get; set; }
+        }
+
+        private string GetReadableStringFromSignalrJsonPayload(byte[] buffer)
+        {
+            var nullStart = Array.IndexOf(buffer, (byte)0x1E);
             nullStart = (nullStart == -1) ? buffer.Length : nullStart;
             var ret = Encoding.Default.GetString(buffer, 0, nullStart);
             return ret;
+        }
+
+        private static byte[] GenerateHandShakMsg()
+        {
+            var handshakeRequestStr = @"{""protocol"": ""json"", ""version"" : 1}";
+
+            return PaddingJsonRecordSeparator(handshakeRequestStr);
+        }
+
+        private static byte[] CreateServerEchoInvocation(string invocationId, string line)
+        {
+            var invocationJsonStr = $"{{\"type\":1,\"invocationId\":\"{invocationId}\",\"target\":\"EchoWithJsonFormat\",\"arguments\":[\"{line}\"] }}";
+
+            return PaddingJsonRecordSeparator(invocationJsonStr);
+        }
+
+        private static byte[] PaddingJsonRecordSeparator(string jsonStr)
+        {
+            var rawBytes = Encoding.UTF8.GetBytes(jsonStr);
+            var paddingBytes = new byte[rawBytes.Length + 1];
+            Buffer.BlockCopy(rawBytes, 0, paddingBytes, 0, rawBytes.Length);
+            paddingBytes[rawBytes.Length] = 0x1E;
+            return paddingBytes;
         }
     }
 }

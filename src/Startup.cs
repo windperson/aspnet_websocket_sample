@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using aspnet_websocket_sample.Middlewares;
+using EchoApp.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -21,7 +22,8 @@ namespace EchoApp
         // For more information on how to configure your application, visit http://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddMvc();
+            services.AddMvc();
+            services.AddSignalR();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,44 +79,49 @@ namespace EchoApp
             //});
             //#endregion
 
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<EchoHub>("/ws");
+            });
+
             app.UseFileServer();
 
         }
-        #region Echo
-        private async Task Echo(HttpContext context, WebSocket webSocket)
-        {
-            var buffer = new byte[1024 * 4];
-            WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+        //#region Echo
+        //private async Task Echo(HttpContext context, WebSocket webSocket)
+        //{
+        //    var buffer = new byte[1024 * 4];
+        //    WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 
-            while (!result.CloseStatus.HasValue)
-            {
-                var receiveStr = GetReadableString(buffer);
+        //    while (!result.CloseStatus.HasValue)
+        //    {
+        //        var receiveStr = GetReadableString(buffer);
 
-                var structedBuffer = new MyStructedLog() { Buffer = receiveStr };
-                _logger.LogInformation("buffer= {@1}", structedBuffer);
+        //        var structedBuffer = new MyStructedLog() { Buffer = receiveStr };
+        //        _logger.LogInformation("buffer= {@1}", structedBuffer);
 
-                var sendStr = $"{{\"recv\": \"{receiveStr}\"}}";
-                var sendBuffer = StringToByteArray(sendStr);
+        //        var sendStr = $"{{\"recv\": \"{receiveStr}\"}}";
+        //        var sendBuffer = StringToByteArray(sendStr);
 
-                await webSocket.SendAsync(new ArraySegment<byte>(sendBuffer, 0, sendBuffer.Count()), result.MessageType, true, CancellationToken.None);
+        //        await webSocket.SendAsync(new ArraySegment<byte>(sendBuffer, 0, sendBuffer.Count()), result.MessageType, true, CancellationToken.None);
 
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            }
-            await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-        }
-        #endregion
+        //        result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+        //    }
+        //    await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+        //}
+        //#endregion
 
-        private string GetReadableString(byte[] buffer)
-        {
-            var nullStart = Array.IndexOf(buffer, (byte)0);
-            nullStart = (nullStart == -1) ? buffer.Length : nullStart;
-            var ret = Encoding.Default.GetString(buffer, 0, nullStart);
-            return ret;
-        }
+        //private string GetReadableString(byte[] buffer)
+        //{
+        //    var nullStart = Array.IndexOf(buffer, (byte)0);
+        //    nullStart = (nullStart == -1) ? buffer.Length : nullStart;
+        //    var ret = Encoding.Default.GetString(buffer, 0, nullStart);
+        //    return ret;
+        //}
 
-        private byte[] StringToByteArray(string source)
-        {
-            return Encoding.Default.GetBytes(source);
-        }
+        //private byte[] StringToByteArray(string source)
+        //{
+        //    return Encoding.Default.GetBytes(source);
+        //}
     }
 }

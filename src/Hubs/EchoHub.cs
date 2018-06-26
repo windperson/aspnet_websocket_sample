@@ -9,19 +9,36 @@ namespace EchoApp.Hubs
 {
     public class EchoHub : Hub
     {
-        private ILogger _logger;
+        private readonly ILogger _logger;
 
         public EchoHub(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<EchoHub>();
         }
 
-        public async Task EchoMessage(string message)
+        public override async Task OnConnectedAsync()
+        {
+            _logger.LogInformation("SignalR client {@1} connected", Context.ConnectionId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, "SignalR Users");
+            await base.OnConnectedAsync();
+        }
+
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "SignalR Users");
+            await base.OnDisconnectedAsync(exception);
+            _logger.LogInformation("SignalR client {@1} disconnected", Context.ConnectionId);
+        }
+
+        public async Task<string> EchoWithJsonFormat(string message)
         {
             var structedBuffer = new MyStructedLog() { Buffer = message };
             _logger.LogInformation("buffer= {@1}", structedBuffer);
             var sendStr = $"{{\"recv\": \"{message}\"}}";
-            await Clients.Caller.SendAsync("client_echo",sendStr);
+
+            return sendStr;
         }
+
+
     }
 }

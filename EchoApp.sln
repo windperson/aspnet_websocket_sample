@@ -8,7 +8,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{828CC819-7D3
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{5780CDF4-CA33-4AE5-8D3A-0B013F561DC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoAppTest", "test\EchoAppTest\EchoAppTest.csproj", "{EEBF0D67-C2A1-40A7-8408-C17176991F68}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EchoAppTest", "test\EchoAppTest\EchoAppTest.csproj", "{EEBF0D67-C2A1-40A7-8408-C17176991F68}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client", "client", "{05B8A497-3941-4E32-91E9-B894C3202AC6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebSocketSample", "client\WebSocketSample\WebSocketSample.csproj", "{43072743-FE98-4CEC-BBC0-E6409B8459A1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,6 +28,10 @@ Global
 		{EEBF0D67-C2A1-40A7-8408-C17176991F68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EEBF0D67-C2A1-40A7-8408-C17176991F68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EEBF0D67-C2A1-40A7-8408-C17176991F68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43072743-FE98-4CEC-BBC0-E6409B8459A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43072743-FE98-4CEC-BBC0-E6409B8459A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43072743-FE98-4CEC-BBC0-E6409B8459A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43072743-FE98-4CEC-BBC0-E6409B8459A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -31,6 +39,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6AA33DF2-DEBA-4757-90FE-049EBEFFDA74} = {828CC819-7D32-4FDD-B040-0C0E5099570A}
 		{EEBF0D67-C2A1-40A7-8408-C17176991F68} = {5780CDF4-CA33-4AE5-8D3A-0B013F561DC3}
+		{43072743-FE98-4CEC-BBC0-E6409B8459A1} = {05B8A497-3941-4E32-91E9-B894C3202AC6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E2236144-F41B-4A9B-8680-466EF8D9E4EB}
