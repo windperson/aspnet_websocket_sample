@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,11 @@ namespace EchoApp.Hubs
             _logger.LogInformation("SignalR client {@1} disconnected", Context.ConnectionId);
         }
 
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+        // ReSharper disable UnusedMember.Global
         public async Task<string> EchoWithJsonFormat(string message)
+        // ReSharper restore UnusedMember.Global
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             var structedBuffer = new MyStructedLog() { Buffer = message };
             _logger.LogInformation("buffer= {@1}", structedBuffer);
@@ -38,7 +43,5 @@ namespace EchoApp.Hubs
 
             return sendStr;
         }
-
-
     }
 }
