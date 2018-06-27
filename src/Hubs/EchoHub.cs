@@ -43,5 +43,31 @@ namespace EchoApp.Hubs
 
             return sendStr;
         }
+
+        // ReSharper disable UnusedMember.Global
+        public ChannelReader<char> Reverse(string input)
+        // ReSharper restore UnusedMember.Global
+        {
+            var channel = Channel.CreateBounded<char>(input.Length);
+
+#pragma warning disable 4014
+            DoReverse(input, channel.Writer, new TimeSpan(0, 0, 1));
+#pragma warning restore 4014
+
+            return channel.Reader;
+        }
+
+        private async Task DoReverse(string input, ChannelWriter<char> channelWriter, TimeSpan delay)
+        {
+            for (var i = input.Length - 1; i >= 0; i--)
+            {
+                var theChar = input[i];
+                _logger.LogInformation("write {0}", theChar);
+                await channelWriter.WriteAsync(theChar);
+                await Task.Delay(delay);
+            }
+
+            channelWriter.TryComplete();
+        }
     }
 }

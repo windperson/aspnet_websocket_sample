@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -64,11 +65,89 @@ namespace EchoAppTest.Integration
             Assert.Equal($"\"{{\\\"recv\\\": \\\"{helloStr}\\\"}}\"", JsonConvert.SerializeObject(rpcResult.Result));
         }
 
+        [Fact]
+        public async Task CanReceivingServerSideStreaming()
+        {
+            //Arrange
+            var socket = await _webSocketClient.ConnectAsync(new Uri("https://localhost/ws"), CancellationToken.None);
+
+            const string helloStr = "hello";
+            var invocationId = DateTime.Now.ToString("yyyy-MM-dd_HH:mm:ss.ff");
+            var hello = CreateServerReverseStreamInvocation(invocationId, helloStr);
+            var handshakeBuffer = new byte[1024 * 2];
+            var recvResults = new List<SignalRpcStreamResult>(helloStr.Length + 1);
+            
+
+            //Act & Assert
+            await socket.SendAsync(new ArraySegment<byte>(GenerateHandShakMsg()), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
+            await socket.ReceiveAsync(new ArraySegment<byte>(handshakeBuffer), CancellationToken.None);
+            var handShakeResult = GetReadableStringFromSignalrJsonPayload(handshakeBuffer);
+            Assert.Equal("{}", handShakeResult);
+
+            await socket.SendAsync(new ArraySegment<byte>(hello), WebSocketMessageType.Text, true, CancellationToken.None);
+
+            do
+            {
+                var tempBuffer = new byte[1024 * 2];
+                var result = await socket.ReceiveAsync(tempBuffer, CancellationToken.None);
+                Assert.Equal(WebSocketMessageType.Text, result.MessageType);
+                Assert.True(result.Count > 0);
+
+                var rpcResult =
+                    JsonConvert.DeserializeObject<SignalRpcStreamResult>(
+                        GetReadableStringFromSignalrJsonPayload(tempBuffer));
+                if(rpcResult.Type == 6) { continue;}
+                
+                recvResults.Add(rpcResult);
+
+                if (rpcResult.Type == 3 && rpcResult.InvocationId == invocationId)
+                {
+                    break;
+                }
+            } while (true);
+            
+            var index = helloStr.Length - 1;
+            foreach (var theChar in helloStr)
+            {
+                var rpcResult = recvResults[index];
+
+                Assert.Equal(2, rpcResult.Type);
+                Assert.Equal(invocationId, rpcResult.InvocationId);
+                var retValue = rpcResult.Item.ToString();
+                Assert.Equal(1, retValue.Length);
+                Assert.Equal(theChar, retValue[0]);
+                index--;
+            }
+
+            var theLastRpcResult = recvResults.Last();
+            Assert.Equal(3, theLastRpcResult.Type);
+            Assert.Equal(invocationId, theLastRpcResult.InvocationId);
+            Assert.Null(theLastRpcResult.Item);
+            Assert.True(string.IsNullOrEmpty(theLastRpcResult.Error));
+        }
+
+        private byte[] CreateServerReverseStreamInvocation(string invocationId, string input)
+        {
+            var invocationJsonStr = $"{{\"type\":4,\"invocationId\":\"{invocationId}\",\"target\":\"Reverse\",\"arguments\":[\"{input}\"] }}";
+
+            return PaddingJsonRecordSeparator(invocationJsonStr);
+
+        }
+
         public class SignalRpcResult
         {
             public int Type { get; set; }
             public string InvocationId { get; set; }
             public Object Result { get; set; }
+        }
+
+        public class SignalRpcStreamResult
+        {
+            public int Type { get; set; }
+            public string InvocationId { get; set; }
+            public Object Item { get; set; }
+
+            public string Error { get; set; }
         }
 
         private string GetReadableStringFromSignalrJsonPayload(byte[] buffer)
@@ -103,3 +182,4 @@ namespace EchoAppTest.Integration
         }
     }
 }
+
