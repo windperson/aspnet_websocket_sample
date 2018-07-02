@@ -126,6 +126,8 @@ namespace EchoAppTest.Integration
             Assert.True(string.IsNullOrEmpty(theLastRpcResult.Error));
         }
 
+
+        #region Utility Function
         private byte[] CreateServerReverseStreamInvocation(string invocationId, string input)
         {
             var invocationJsonStr = $"{{\"type\":4,\"invocationId\":\"{invocationId}\",\"target\":\"Reverse\",\"arguments\":[\"{input}\"] }}";
@@ -180,6 +182,8 @@ namespace EchoAppTest.Integration
             paddingBytes[rawBytes.Length] = 0x1E;
             return paddingBytes;
         }
+
+        #endregion
     }
 }
 

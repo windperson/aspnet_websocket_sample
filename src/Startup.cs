@@ -24,6 +24,9 @@ namespace EchoApp
         // For more information on how to configure your application, visit http://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //For BroadcastController keep sent message history
+            services.AddMemoryCache();
+
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             services.AddSignalR().AddHubOptions<EchoHub>(options =>
             {
@@ -47,9 +50,9 @@ namespace EchoApp
             else
             {
                 app.UseHsts();
+                app.UseHttpsRedirection();
             }
 
-            app.UseHttpsRedirection();
 
             app.UseLogRequest();
             app.UseLogResponse();
@@ -91,6 +94,11 @@ namespace EchoApp
                 {
                     options.WebSockets.CloseTimeout = new TimeSpan(0,0,1);
                 });
+            });
+
+            app.UseMvc(routeBuilder =>
+            {
+                routeBuilder.MapRoute("broadcast", "{controller}/{action=Index}");
             });
 
             app.UseFileServer();

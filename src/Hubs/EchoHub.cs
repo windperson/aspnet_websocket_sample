@@ -31,11 +31,11 @@ namespace EchoApp.Hubs
             _logger.LogInformation("SignalR client {@1} disconnected", Context.ConnectionId);
         }
 
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning disable CS1998
         // ReSharper disable UnusedMember.Global
         public async Task<string> EchoWithJsonFormat(string message)
         // ReSharper restore UnusedMember.Global
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
+#pragma warning restore CS1998
         {
             var structedBuffer = new MyStructedLog() { Buffer = message };
             _logger.LogInformation("buffer= {@1}", structedBuffer);

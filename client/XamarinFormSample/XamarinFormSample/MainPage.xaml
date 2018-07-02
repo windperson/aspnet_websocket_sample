@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:XamarinFormSample"
+             x:Class="XamarinFormSample.MainPage">
+
+    <StackLayout>
+
+        <StackLayout HorizontalOptions="Fill">
+            <Label HorizontalOptions="Start">ASP.NET Core SignalR URL:</Label>
+            <Entry x:Name="UrlEntry"
+                Text="https://remote_url/ws"/>
+            <Button x:Name="ConnectHubButton" Text="Connect Hub"
+                    VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Clicked="ConnectHubButton_OnClicked"/>
+            <Label x:Name="ConnectStatusLabel" Text="disconnected" HorizontalOptions="Center"/>
+        </StackLayout>
+        <ScrollView VerticalOptions="FillAndExpand" HorizontalOptions="Fill">
+            <StackLayout>
+                <BoxView Color="Coral" HeightRequest="1"></BoxView>
+
+                <StackLayout VerticalOptions="Center" HeightRequest="150">
+                    <Label>Server single result RPC:</Label>
+                    <Entry x:Name="EchoInputEntry" Placeholder="Enter some text" IsSpellCheckEnabled="False" />
+                    <Button x:Name="CallEchoButton" Text="Call Echo()" 
+                        VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Clicked="CallEchoButton_OnClicked"/>
+                </StackLayout>
+
+                <BoxView Color="Chartreuse" HeightRequest="1"></BoxView>
+
+                <StackLayout VerticalOptions="Center">
+                    <Label>Server streaming result RPC:</Label>
+                    <Entry x:Name="ReverseInputEntry" Placeholder="Enter some text" IsSpellCheckEnabled="False" />
+                    <Button x:Name="CallReverseButton" Text="Call Stream Reverse()" 
+                        VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Clicked="CallReverseButton_OnClicked"/>
+                    <Frame CornerRadius="0.5" HasShadow="True" BorderColor="Red" VerticalOptions="StartAndExpand">
+                        <Label x:Name="ReverseLabel"
+                               HorizontalOptions="Fill" LineBreakMode="CharacterWrap"/>
+                    </Frame>
+                </StackLayout>
+
+                <BoxView Color="Chartreuse" HeightRequest="1"></BoxView>
+
+                <StackLayout VerticalOptions="EndAndExpand">
+                    <Label>Server send to client:</Label>
+                    <Frame CornerRadius="0.5" HasShadow="True" BorderColor="Red" VerticalOptions="StartAndExpand">
+                        <Label x:Name="ServerSendLabel"
+                            HorizontalOptions="Fill" LineBreakMode="CharacterWrap" HeightRequest="200"/>
+                    </Frame>
+                </StackLayout>
+
+            </StackLayout>
+        </ScrollView>
+
+
+    </StackLayout>
+
+</ContentPage>
+
