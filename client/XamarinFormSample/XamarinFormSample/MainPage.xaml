@@ -4,19 +4,23 @@
              xmlns:local="clr-namespace:XamarinFormSample"
              x:Class="XamarinFormSample.MainPage">
 
+    <ContentPage.Padding>
+        <OnPlatform x:TypeArguments="Thickness">
+            <On Platform="iOS" Value="0,20,0,0"/>
+        </OnPlatform>
+    </ContentPage.Padding>
     <StackLayout>
-
         <StackLayout HorizontalOptions="Fill">
             <Label HorizontalOptions="Start">ASP.NET Core SignalR URL:</Label>
             <Entry x:Name="UrlEntry"
-                Text="https://remote_url/ws"/>
+                Text="https://5500190f.ngrok.io/ws"/>
             <Button x:Name="ConnectHubButton" Text="Connect Hub"
                     VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Clicked="ConnectHubButton_OnClicked"/>
             <Label x:Name="ConnectStatusLabel" Text="disconnected" HorizontalOptions="Center"/>
         </StackLayout>
+        <BoxView Color="Coral" HeightRequest="1"></BoxView>
         <ScrollView VerticalOptions="FillAndExpand" HorizontalOptions="Fill">
             <StackLayout>
-                <BoxView Color="Coral" HeightRequest="1"></BoxView>
 
                 <StackLayout VerticalOptions="Center" HeightRequest="150">
                     <Label>Server single result RPC:</Label>

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
+using Xamarin.Essentials;
 using Xamarin.Forms;
 
 namespace XamarinFormSample
@@ -29,13 +31,15 @@ namespace XamarinFormSample
             {
                 if (_connection != null)
                 {
+                    ConnectStatusLabel.Text = "disconnecting...";
                     await _connection.StopAsync();
+                    ConnectStatusLabel.Text = "disconnected";
                 }
                 else
                 {
                     _connection = CreateHubConnection(urlStr);
                 }
-
+                ConnectStatusLabel.Text = "connecting...";
                 await _connection.StartAsync();
                 SetDemoUIStatus();
             }
@@ -77,8 +81,9 @@ namespace XamarinFormSample
 
             try
             {
-                var channel = await _connection.StreamAsChannelAsync<char>("Reverse", inputStr);
+                ReverseLabel.Text = string.Empty;
 
+                var channel = await _connection.StreamAsChannelAsync<char>("Reverse", inputStr);
                 while (await channel.WaitToReadAsync())
                 {
                     while (channel.TryRead(out char streamResult))
@@ -93,24 +98,7 @@ namespace XamarinFormSample
             }
         }
 
-        private HubConnection CreateHubConnection(string url)
-        {
-            var conn = (new HubConnectionBuilder()).WithUrl(url).Build();
-
-            conn.On<string>("OnBroadcast", recv =>
-            {
-                Device.BeginInvokeOnMainThread(async () => await DoThingsOnServerCall(recv));
-            });
-
-            return conn;
-        }
-
-        private async Task DoThingsOnServerCall(string recv)
-        {
-            await DisplayAlert("server call client", $"recv={recv}", "OK");
-            ServerSendLabel.Text += $"{recv}\n";
-        }
-
+        #region UI Status
         private void ResetUIStatus()
         {
             ConnectStatusLabel.Text = "disconnected";
@@ -133,5 +121,48 @@ namespace XamarinFormSample
 
             ServerSendLabel.Text = string.Empty;
         }
+
+        #endregion
+
+        private HubConnection CreateHubConnection(string url)
+        {
+
+            var conn = (new HubConnectionBuilder()).WithUrl(url)
+                .ConfigureLogging(loggingBuilder =>
+                {
+#if DEBUG
+                    loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+#else
+                    loggingBuilder.SetMinimumLevel(LogLevel.Information);
+#endif
+                    var platform = DeviceInfo.Platform;
+                    if (platform != DeviceInfo.Platforms.UWP)
+                    {
+                        loggingBuilder.AddConsole(options =>
+                        {
+                            options.DisableColors = true;
+                        });
+                    }
+                    else
+                    {
+                        loggingBuilder.AddDebug();
+                    }
+                })
+                .Build();
+
+            conn.On<string>("OnBroadcast", recv =>
+            {
+                Device.BeginInvokeOnMainThread(async () => await DoThingsOnServerCall(recv));
+            });
+
+            return conn;
+        }
+
+        private async Task DoThingsOnServerCall(string recv)
+        {
+            await DisplayAlert("server call client", $"recv={recv}", "OK");
+            ServerSendLabel.Text += $"{recv}\n";
+        }
+
     }
 }
