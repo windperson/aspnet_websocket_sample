@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
@@ -48,23 +49,29 @@ namespace EchoApp.Hubs
         public ChannelReader<char> Reverse(string input)
         // ReSharper restore UnusedMember.Global
         {
+            var cancellationToken = Context.ConnectionAborted;
             var channel = Channel.CreateBounded<char>(input.Length);
 
 #pragma warning disable 4014
-            DoReverse(input, channel.Writer, new TimeSpan(0, 0, 1));
+            DoReverse(input, channel.Writer, new TimeSpan(0, 0, 1), cancellationToken);
 #pragma warning restore 4014
 
             return channel.Reader;
         }
 
-        private async Task DoReverse(string input, ChannelWriter<char> channelWriter, TimeSpan delay)
+        private async Task DoReverse(string input, ChannelWriter<char> channelWriter, TimeSpan delay, CancellationToken cancellationToken)
         {
             for (var i = input.Length - 1; i >= 0; i--)
             {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                
                 var theChar = input[i];
                 _logger.LogInformation("write {0}", theChar);
-                await channelWriter.WriteAsync(theChar);
-                await Task.Delay(delay);
+                await channelWriter.WriteAsync(theChar, cancellationToken);
+                await Task.Delay(delay, cancellationToken);
             }
 
             channelWriter.TryComplete();

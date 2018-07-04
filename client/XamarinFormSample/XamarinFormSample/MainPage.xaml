@@ -13,7 +13,7 @@
         <StackLayout HorizontalOptions="Fill">
             <Label HorizontalOptions="Start">ASP.NET Core SignalR URL:</Label>
             <Entry x:Name="UrlEntry"
-                Text="https://5500190f.ngrok.io/ws"/>
+                Text="https://your_aspnet_core_signalr_url/ws"/>
             <Button x:Name="ConnectHubButton" Text="Connect Hub"
                     VerticalOptions="CenterAndExpand" HorizontalOptions="Center" Clicked="ConnectHubButton_OnClicked"/>
             <Label x:Name="ConnectStatusLabel" Text="disconnected" HorizontalOptions="Center"/>

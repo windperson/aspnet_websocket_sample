@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
 using Xamarin.Forms;
@@ -10,6 +11,8 @@ namespace XamarinFormSample
     public partial class MainPage : ContentPage
     {
         private HubConnection _connection;
+
+        private CancellationTokenSource _streamingCancellationTokenSource;
 
         public MainPage()
         {
@@ -37,6 +40,7 @@ namespace XamarinFormSample
                 }
                 else
                 {
+                    //Note: HubConnection cannot be reused
                     _connection = CreateHubConnection(urlStr);
                 }
                 ConnectStatusLabel.Text = "connecting...";
@@ -72,6 +76,17 @@ namespace XamarinFormSample
 
         private async void CallReverseButton_OnClicked(object sender, EventArgs e)
         {
+            const string streamingBtnTxt = "Cancel Streaming...";
+            const string defaultBtnTxt = "Call Stream Reverse()";
+
+            if (CallReverseButton.Text == streamingBtnTxt && _streamingCancellationTokenSource != null)
+            {
+
+                _streamingCancellationTokenSource.Cancel();
+                CallReverseButton.Text = defaultBtnTxt;
+                return;
+            }
+
             var inputStr = ReverseInputEntry.Text.Trim();
             if (string.IsNullOrEmpty(inputStr))
             {
@@ -79,22 +94,34 @@ namespace XamarinFormSample
                 return;
             }
 
+            ReverseLabel.Text = string.Empty;
+            CallReverseButton.Text = streamingBtnTxt;
+
+            _streamingCancellationTokenSource = new CancellationTokenSource();
             try
             {
-                ReverseLabel.Text = string.Empty;
-
-                var channel = await _connection.StreamAsChannelAsync<char>("Reverse", inputStr);
-                while (await channel.WaitToReadAsync())
+                var channelReader = await _connection.StreamAsChannelAsync<char>("Reverse", inputStr,
+                    _streamingCancellationTokenSource.Token);
+                while (!_streamingCancellationTokenSource.IsCancellationRequested &&
+                       await channelReader.WaitToReadAsync(_streamingCancellationTokenSource.Token))
                 {
-                    while (channel.TryRead(out char streamResult))
+                    while (channelReader.TryRead(out char streamResult))
                     {
                         ReverseLabel.Text += $"{streamResult}\n";
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                await DisplayAlert("cancel operation", "Streaming Reverse() has cancelled.", "OK");
+            }
             catch (Exception ex)
             {
                 await DisplayAlert("call Reverse() fail", $"ex=\n{ex}", "OK");
+            }
+            finally
+            {
+                CallReverseButton.Text = defaultBtnTxt;
             }
         }
 
@@ -121,22 +148,22 @@ namespace XamarinFormSample
 
             ServerSendLabel.Text = string.Empty;
         }
-
         #endregion
 
+        #region ASP.NET Core SignalR related
         private HubConnection CreateHubConnection(string url)
         {
-
-            var conn = (new HubConnectionBuilder()).WithUrl(url)
+            HubConnection conn =
+                new HubConnectionBuilder()
+                .WithUrl(url)
                 .ConfigureLogging(loggingBuilder =>
                 {
 #if DEBUG
-                    loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+                    loggingBuilder.SetMinimumLevel(LogLevel.Debug);
 #else
                     loggingBuilder.SetMinimumLevel(LogLevel.Information);
 #endif
-                    var platform = DeviceInfo.Platform;
-                    if (platform != DeviceInfo.Platforms.UWP)
+                    if (DeviceInfo.Platform != DeviceInfo.Platforms.UWP)
                     {
                         loggingBuilder.AddConsole(options =>
                         {
@@ -164,5 +191,6 @@ namespace XamarinFormSample
             ServerSendLabel.Text += $"{recv}\n";
         }
 
+        #endregion
     }
 }
