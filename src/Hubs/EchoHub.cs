@@ -12,7 +12,6 @@ namespace EchoApp.Hubs
     public class EchoHub : Hub
     {
         private readonly ILogger _logger;
-
         public EchoHub(ILoggerFactory loggerFactory)
         {
             _logger = loggerFactory.CreateLogger<EchoHub>();
@@ -22,7 +21,7 @@ namespace EchoApp.Hubs
         {
             _logger.LogInformation("SignalR client {@1} connected", Context.ConnectionId);
             await Groups.AddToGroupAsync(Context.ConnectionId, "SignalR Users");
-            await base.OnConnectedAsync();
+            await base.OnConnectedAsync();            
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
@@ -50,7 +49,7 @@ namespace EchoApp.Hubs
         // ReSharper restore UnusedMember.Global
         {
             var cancellationToken = Context.ConnectionAborted;
-            var channel = Channel.CreateBounded<char>(input.Length);
+            var channel = Channel.CreateBounded<char>(1);
 
 #pragma warning disable 4014
             DoReverse(input, channel.Writer, new TimeSpan(0, 0, 1), cancellationToken);
@@ -61,20 +60,27 @@ namespace EchoApp.Hubs
 
         private async Task DoReverse(string input, ChannelWriter<char> channelWriter, TimeSpan delay, CancellationToken cancellationToken)
         {
-            for (var i = input.Length - 1; i >= 0; i--)
+            try
             {
-                if (cancellationToken.IsCancellationRequested)
+                for (var i = input.Length - 1; i >= 0; i--)
                 {
-                    break;
-                }
-                
-                var theChar = input[i];
-                _logger.LogInformation("write {0}", theChar);
-                await channelWriter.WriteAsync(theChar, cancellationToken);
-                await Task.Delay(delay, cancellationToken);
-            }
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
 
-            channelWriter.TryComplete();
+                    var theChar = input[i];
+                    _logger.LogInformation("write {0}", theChar);
+                    await channelWriter.WriteAsync(theChar, cancellationToken);
+                    await Task.Delay(delay, cancellationToken);
+                }
+
+                channelWriter.TryComplete();
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("channel writer canncelled due to client disconnected.");
+            }
         }
     }
 }
