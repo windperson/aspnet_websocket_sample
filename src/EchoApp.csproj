@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <GenerateFullPaths>true</GenerateFullPaths>
-    <StartupObject></StartupObject>
+    <UserSecretsId>a3003797-a5a8-491f-b469-bbbfed4604f4</UserSecretsId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>AnyCPU</PlatformTarget>
