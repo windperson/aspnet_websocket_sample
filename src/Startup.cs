@@ -36,11 +36,19 @@ namespace EchoApp
             services.AddMemoryCache();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-            services.AddSignalR().AddHubOptions<EchoHub>(options =>
+
+            var useAzureSignalr = !string.IsNullOrEmpty(Configuration["UseAzureSignalR"]) && bool.Parse(Configuration["UseAzureSignalR"].Trim());
+
+            var signalRServerBuilder = services.AddSignalR().AddHubOptions<EchoHub>(options =>
             {
                 options.EnableDetailedErrors = true;
                 //options.SupportedProtocols = new List<string>{"json"};
-            }).AddAzureSignalR();
+            });
+
+            if (useAzureSignalr)
+            {
+                signalRServerBuilder.AddAzureSignalR();
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -63,7 +71,7 @@ namespace EchoApp
 
 
             app.UseLogRequest();
-            app.UseLogResponse();
+            //app.UseLogResponse();
 
             //#region UseWebSocketsOptions
             //var webSocketOptions = new WebSocketOptions()
