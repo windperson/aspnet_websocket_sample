@@ -63,7 +63,7 @@ namespace EchoApp
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        await Echo(context, webSocket);
+                        await Echo(webSocket);
                     }
                     else
                     {
@@ -81,7 +81,7 @@ namespace EchoApp
 
         }
         #region Echo
-        private async Task Echo(HttpContext context, WebSocket webSocket)
+        private async Task Echo(WebSocket webSocket)
         {
             var buffer = new byte[1024 * 4];
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
