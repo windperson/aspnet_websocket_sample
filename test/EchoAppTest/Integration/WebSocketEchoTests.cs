@@ -1,38 +1,37 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EchoApp;
-using EchoAppTest.Util;
-using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Serilog;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace EchoAppTest.Integration
 {
-    public class WebSocketEchoTests : IClassFixture<IntegrationTestFixture<Startup>>
+    public class WebSocketEchoTests : IClassFixture<WebApplicationFactory<Startup>>
     {
         private readonly ILogger _output;
+        private readonly WebApplicationFactory<Startup> _factory;
 
-        private readonly WebSocketClient _webSocketClient;
-
-        public WebSocketEchoTests(IntegrationTestFixture<Startup> fixture, ITestOutputHelper testOutputHelper)
+        public WebSocketEchoTests(WebApplicationFactory<Startup> factory, ITestOutputHelper testOutputHelper)
         {
             _output = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.TestOutput(testOutputHelper)
                 .CreateLogger();
-            _webSocketClient = fixture.CreateWebSocketClient();
+            _factory = factory;
         }
 
         [Fact]
         public async Task SendToCorrectServerHostingUrlAndGetCorrectReceiveMessage()
         {
             //Arrange
-            var socket = await _webSocketClient.ConnectAsync(new Uri("https://localhost/ws"), CancellationToken.None);
+            //Note: We have to call CreateClient() first or the Server property in WebApplicationFactory would be null.
+            _factory.CreateClient();
+            var socket = await _factory.Server.CreateWebSocketClient().ConnectAsync(new Uri("https://localhost/ws"), CancellationToken.None);
             var helloStr = "hello";
             var hello = Encoding.UTF8.GetBytes(helloStr);
             var recvBuffer = new byte[1024 * 4];
