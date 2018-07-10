@@ -2,14 +2,15 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <GenerateFullPaths>true</GenerateFullPaths>
-    <RuntimeFrameworkVersion>2.1.1</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion>2.1.0</RuntimeFrameworkVersion>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
 
   <PropertyGroup>
-    <RestoreSources>../nuget_packages;$(RestoreSources)</RestoreSources>
+    <RestoreSources>$(RestoreSources);../nuget_packages;</RestoreSources>
   </PropertyGroup> 
     
   <ItemGroup>
@@ -17,6 +18,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.1-rtm-t000" />
     <PackageReference Include="Microsoft.AspNetCore.HttpsPolicy" Version="2.1.1-rtm-t000" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.1-rtm-t000" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.1.1-rtm-t000" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.1.1-rtm-t000" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.1.1-rtm-t000" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Extensions" Version="2.1.1-rtm-t000" />
