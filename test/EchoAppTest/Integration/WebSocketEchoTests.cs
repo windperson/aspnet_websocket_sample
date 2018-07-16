@@ -6,7 +6,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using EchoApp;
-using EchoAppTest.Util;
+using EchoAppTest.Utils;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Newtonsoft.Json;
 using Serilog;
@@ -15,19 +16,21 @@ using Xunit.Abstractions;
 
 namespace EchoAppTest.Integration
 {
-    public class WebSocketEchoTests : IClassFixture<IntegrationTestFixture<Startup>>
+    public class WebSocketEchoTests : IClassFixture<WebApplicationFactory<Startup>>
     {
         private readonly ILogger _output;
 
         private readonly WebSocketClient _webSocketClient;
 
-        public WebSocketEchoTests(IntegrationTestFixture<Startup> fixture, ITestOutputHelper testOutputHelper)
+        public WebSocketEchoTests(WebApplicationFactory<Startup> factory, ITestOutputHelper testOutputHelper)
         {
             _output = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.TestOutput(testOutputHelper)
                 .CreateLogger();
-            _webSocketClient = fixture.CreateWebSocketClient();
+
+            factory.CreateClient();
+            _webSocketClient = factory.Server.CreateWebSocketClient();
         }
 
         [Fact]
@@ -43,14 +46,14 @@ namespace EchoAppTest.Integration
             var recvBuffer = new byte[1024 * 2];
 
             //Act
-            await socket.SendAsync(new ArraySegment<byte>(GenerateHandShakMsg()), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
-            await socket.ReceiveAsync(new ArraySegment<byte>(handshakeBuffer), CancellationToken.None);
+            await socket.SendAsync(new ArraySegment<byte>(GenerateHandShakMsg()), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None).OrTimeout();
+            await socket.ReceiveAsync(new ArraySegment<byte>(handshakeBuffer), CancellationToken.None).OrTimeout();
             var handShakeResult = GetReadableStringFromSignalrJsonPayload(handshakeBuffer);
             Assert.Equal("{}", handShakeResult);
 
-            await socket.SendAsync(new ArraySegment<byte>(hello), WebSocketMessageType.Text, true, CancellationToken.None);
-            var result = await socket.ReceiveAsync(recvBuffer, CancellationToken.None);
-            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "end test", CancellationToken.None);
+            await socket.SendAsync(new ArraySegment<byte>(hello), WebSocketMessageType.Text, true, CancellationToken.None).OrTimeout();
+            var result = await socket.ReceiveAsync(recvBuffer, CancellationToken.None).OrTimeout();
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "end test", CancellationToken.None).OrTimeout();
 
             //Assert
             Assert.Equal(WebSocketMessageType.Text, result.MessageType);
@@ -69,7 +72,7 @@ namespace EchoAppTest.Integration
         public async Task CanReceivingServerSideStreaming()
         {
             //Arrange
-            var socket = await _webSocketClient.ConnectAsync(new Uri("https://localhost/ws"), CancellationToken.None);
+            var socket = await _webSocketClient.ConnectAsync(new Uri("https://localhost/ws"), CancellationToken.None).OrTimeout();
 
             const string helloStr = "hello";
             var invocationId = DateTime.Now.ToString("yyyy-MM-dd_HH:mm:ss.ff");
@@ -79,17 +82,17 @@ namespace EchoAppTest.Integration
             
 
             //Act & Assert
-            await socket.SendAsync(new ArraySegment<byte>(GenerateHandShakMsg()), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None);
-            await socket.ReceiveAsync(new ArraySegment<byte>(handshakeBuffer), CancellationToken.None);
+            await socket.SendAsync(new ArraySegment<byte>(GenerateHandShakMsg()), WebSocketMessageType.Text, endOfMessage: true, cancellationToken: CancellationToken.None).OrTimeout();
+            await socket.ReceiveAsync(new ArraySegment<byte>(handshakeBuffer), CancellationToken.None).OrTimeout();
             var handShakeResult = GetReadableStringFromSignalrJsonPayload(handshakeBuffer);
             Assert.Equal("{}", handShakeResult);
 
-            await socket.SendAsync(new ArraySegment<byte>(hello), WebSocketMessageType.Text, true, CancellationToken.None);
+            await socket.SendAsync(new ArraySegment<byte>(hello), WebSocketMessageType.Text, true, CancellationToken.None).OrTimeout();
 
             do
             {
                 var tempBuffer = new byte[1024 * 2];
-                var result = await socket.ReceiveAsync(tempBuffer, CancellationToken.None);
+                var result = await socket.ReceiveAsync(tempBuffer, CancellationToken.None).OrTimeout();
                 Assert.Equal(WebSocketMessageType.Text, result.MessageType);
                 Assert.True(result.Count > 0);
 
