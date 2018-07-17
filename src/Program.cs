@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore;
+﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Configuration;
+using System;
+using System.IO;
 
 namespace EchoApp
 {
@@ -18,14 +13,21 @@ namespace EchoApp
             try
             {
                 Console.OutputEncoding = System.Text.Encoding.UTF8;
-                Log.Logger = new LoggerConfiguration()
-                    .WriteTo.Console()
-                    .WriteTo.Trace()
-                    .Enrich.FromLogContext()
-                    .CreateLogger();
 
-                var host = CreateWebHostBuilder(args)
-                    .Build();
+                LoggerConfiguration logConfig = new LoggerConfiguration()
+                    .WriteTo.Console()
+                    .WriteTo.Trace();
+
+                var aiKey = GetAzureApplicationInsightKey();
+                if (!string.IsNullOrEmpty(aiKey))
+                {
+                    logConfig.WriteTo.ApplicationInsightsTraces(aiKey);
+                }
+
+                Log.Logger = logConfig
+                        .Enrich.FromLogContext().CreateLogger();
+
+                IWebHost host = CreateWebHostBuilder(args).Build();
 
                 host.Run();
             }
@@ -33,15 +35,29 @@ namespace EchoApp
             {
                 Log.Logger.Fatal(ex, "start failed");
             }
-            
+
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-            .UseKestrel()
-            .UseContentRoot(Directory.GetCurrentDirectory())
-            .UseIISIntegration()
-            .UseSerilog()
-            .UseStartup<Startup>();
+        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
+        {
+            var builder = WebHost.CreateDefaultBuilder(args);
+
+            var aiKey = GetAzureApplicationInsightKey();
+            if (!string.IsNullOrEmpty(aiKey))
+            {
+                builder = builder.UseApplicationInsights();
+            }
+
+            return builder.UseKestrel()
+                          .UseContentRoot(Directory.GetCurrentDirectory())
+                          .UseIISIntegration()
+                          .UseSerilog()
+                          .UseStartup<Startup>();
+        }
+
+
+        private static string GetAzureApplicationInsightKey() =>
+         Environment.GetEnvironmentVariable("APPINSIGHTS_INSTRUMENTATIONKEY");
+
     }
 }

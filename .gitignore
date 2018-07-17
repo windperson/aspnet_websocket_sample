@@ -372,3 +372,4 @@ __pycache__/
 
 # End of https://www.gitignore.io/api/jetbrains,visualstudio,visualstudiocode
 *.pubxml
+src/_AzureApplicationInsight.csproj

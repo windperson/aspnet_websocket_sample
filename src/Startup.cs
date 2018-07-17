@@ -37,7 +37,7 @@ namespace EchoApp
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-            var useAzureSignalr = !string.IsNullOrEmpty(Configuration["UseAzureSignalR"]) && bool.Parse(Configuration["UseAzureSignalR"].Trim());
+            var useAzureSignalr = IsSetUseAzureSignalr();
 
             var signalRServerBuilder = services.AddSignalR().AddHubOptions<EchoHub>(options =>
             {
@@ -104,7 +104,7 @@ namespace EchoApp
             //});
             //#endregion
 
-            var useAzureSignalr = !string.IsNullOrEmpty(Configuration["UseAzureSignalR"]) && bool.Parse(Configuration["UseAzureSignalR"].Trim());
+            var useAzureSignalr = IsSetUseAzureSignalr();
 
             if (!useAzureSignalr)
             {
@@ -132,6 +132,12 @@ namespace EchoApp
                 });
             }
         }
+
+        private bool IsSetUseAzureSignalr()
+        {
+            return !string.IsNullOrEmpty(Configuration["UseAzureSignalR"]) && bool.Parse(Configuration["UseAzureSignalR"].Trim());
+        }
+
         //#region Echo
         //private async Task Echo(HttpContext context, WebSocket webSocket)
         //{
