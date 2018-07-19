@@ -69,32 +69,37 @@
 
         var signalRstatus = "disconnected";
 
-        var scheme = document.location.protocol == "https:" ? "wss" : "ws";
+        //var scheme = document.location.protocol == "https:" ? "wss" : "ws";
         var port = document.location.port ? (":" + document.location.port) : "";
 
-        connectionUrl.value = scheme + "://" + document.location.hostname + port + "/ws";
+        //connectionUrl.value = scheme + "://" + document.location.hostname + port + "/ws";
+        connectionUrl.value = document.location.protocol + "//" + document.location.hostname + port + "/ws";
 
         function isEmpty(str) {
             return (!str || 0 === str.length);
         }
 
-        const signalRconn =
-            new signalR.HubConnectionBuilder().withUrl("/ws").configureLogging(signalR.LogLevel.Debug).build();
+        var signalRconn = null;
 
-        signalRconn.on("OnBroadcast", (recv) => {
-            alert("recv=" + recv);
-        });
+        function InitSignalR(url) {
+            const conn = new signalR.HubConnectionBuilder().withUrl(url).configureLogging(signalR.LogLevel.Debug).build();
 
-        signalRconn.onclose(err => {
-            signalRstatus = "disconnected";
-            if (err !== null && err !== undefined) {
-                console.log("onclose has error=" + error.toString());
-            }
-            updateState();
-            commsLog.innerHTML += '<tr>' +
-                '<td colspan="3" class="commslog-data">Connection closed</td></tr>';
-        });
+            conn.on("OnBroadcast", (recv) => {
+                alert("recv=" + recv);
+            });
 
+            conn.onclose(err => {
+                signalRstatus = "disconnected";
+                if (err !== null && err !== undefined) {
+                    console.log("onclose has error=" + error.toString());
+                }
+                updateState();
+                commsLog.innerHTML += '<tr>' +
+                    '<td colspan="3" class="commslog-data">Connection closed</td></tr>';
+            });
+
+            return conn;
+        }
 
         function updateState() {
             function disable() {
@@ -256,6 +261,7 @@
         connectButton.onclick = function () {
             signalRstatus = "connecting";
             stateLabel.innerHTML = "Connecting";
+            signalRconn = InitSignalR(connectionUrl.value);
             signalRconn.start()
                 .then(() => {
                     signalRstatus = "connected";
