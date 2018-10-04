@@ -1,0 +1,26 @@
+{
+  //"ReRoutes": [
+  //  {
+  //    "DownstreamPathTemplate": "/{catchAll}",
+  //    "DownstreamScheme": "ws",
+  //    "DownstreamHostAndPorts": [
+  //      {
+  //        "Host": "localhost",
+  //        "Port": 50732
+  //      }
+  //    ],
+  //    "UpstreamPathTemplate": "/{catchAll}"
+  //  },
+  //  {
+  //    "DownstreamPathTemplate": "/{catchAll}",
+  //    "DownstreamScheme": "wss",
+  //    "DownstreamHostAndPorts": [
+  //      {
+  //        "Host": "localhost",
+  //        "Port": 50733
+  //      }
+  //    ],
+  //    "UpstreamPathTemplate": "/{catchAll}"
+  //  }
+  //] 
+}

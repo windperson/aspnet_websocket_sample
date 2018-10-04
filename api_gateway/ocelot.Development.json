@@ -1,0 +1,54 @@
+{
+  "ReRoutes": [
+    //websocket
+    {
+      "DownstreamPathTemplate": "/ws",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 50870
+        }
+      ],
+      "UpstreamPathTemplate": "/ws"
+    }
+    ,
+    //{
+    //  "DownstreamPathTemplate": "/ws",
+    //  "DownstreamScheme": "wss",
+    //  "DownstreamHostAndPorts": [
+    //    {
+    //      "Host": "localhost",
+    //      "Port": 50871
+    //    }
+    //  ],
+    //  "UpstreamPathTemplate": "/ws"
+    //},
+
+    //normal http(s)
+    {
+      "DownstreamPathTemplate": "/{all}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 50870
+        }
+      ],
+      "UpstreamPathTemplate": "/{all}"
+
+    }
+    //,
+    //{
+    //  "DownstreamPathTemplate": "/",
+    //  "DownstreamScheme": "https",
+    //  "DownstreamHostAndPorts": [
+    //    {
+    //      "Host": "localhost",
+    //      "Port": 50871
+    //    }
+    //  ],
+    //  "UpstreamPathTemplate": "/"
+    //}
+  ]
+}

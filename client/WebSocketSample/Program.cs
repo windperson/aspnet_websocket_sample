@@ -31,7 +31,7 @@ namespace WebSocketSample
 
         private static async Task RunWebSockets()
         {
-            const string serverUrl = "ws://localhost:50732/ws";
+            const string serverUrl = "ws://localhost:50870/ws";
             Console.WriteLine($"Press any key to connect to {serverUrl}, press Ctrl + C to exit...");
             Console.ReadKey();
 
