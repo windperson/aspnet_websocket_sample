@@ -1,26 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using aspnet_websocket_sample.Middlewares;
+﻿using System.Text;
 using EchoApp.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 
 namespace EchoApp
 {
     public class Startup
     {
-        private ILogger _logger;
-        
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -35,9 +24,7 @@ namespace EchoApp
             //For BroadcastController keep sent message history
             services.AddMemoryCache();
 
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
-
-            var useAzureSignalr = IsSetUseAzureSignalr();
+            services.AddControllersWithViews();
 
             var signalRServerBuilder = services.AddSignalR().AddHubOptions<EchoHub>(options =>
             {
@@ -45,19 +32,17 @@ namespace EchoApp
                 //options.SupportedProtocols = new List<string>{"json"};
             });
 
-            if (useAzureSignalr)
+            if (IsSetUseAzureSignalr())
             {
                 signalRServerBuilder.AddAzureSignalR();
             }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             //for System.Encoding.GetEncoding() to work.
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-
-            _logger = loggerFactory.CreateLogger<Startup>();
 
             if (env.IsDevelopment())
             {
@@ -66,113 +51,22 @@ namespace EchoApp
             else
             {
                 app.UseHsts();
-                app.UseHttpsRedirection();
             }
 
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
-            app.UseLogRequest();
-            //app.UseLogResponse();
-
-            //#region UseWebSocketsOptions
-            //var webSocketOptions = new WebSocketOptions()
-            //{
-            //    KeepAliveInterval = TimeSpan.FromSeconds(120),
-            //    ReceiveBufferSize = 1024 * 4
-            //};
-            //app.UseWebSockets(webSocketOptions);
-            //#endregion
-
-            //#region AcceptWebSocket
-            //app.Use(async (context, next) =>
-            //{
-            //    if (context.Request.Path == "/ws")
-            //    {
-            //        if (context.WebSockets.IsWebSocketRequest)
-            //        {
-            //            WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-            //            await Echo(context, webSocket);
-            //        }
-            //        else
-            //        {
-            //            context.Response.StatusCode = 400;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        await next();
-            //    }
-            //});
-            //#endregion
-
-            var useAzureSignalr = IsSetUseAzureSignalr();
-
-            if (!useAzureSignalr)
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
             {
-                app.UseSignalR(routes =>
-                {
-                    routes.MapHub<EchoHub>("/ws", options =>
-                    {
-                        options.WebSockets.CloseTimeout = new TimeSpan(0, 0, 1);
-                    });
-                });
-            }
-            
-            app.UseMvc(routeBuilder =>
-            {
-                routeBuilder.MapRoute("broadcast", "{controller}/{action=Index}");
+                endpoints.MapControllerRoute(name: "broadcast", pattern: "{controller}/{action=Index}");
+                endpoints.MapHub<EchoHub>("/ws");
             });
-
-            app.UseFileServer();
-
-            if (useAzureSignalr)
-            {
-                app.UseAzureSignalR(routes =>
-                {
-                    routes.MapHub<EchoHub>("/ws");
-                });
-            }
         }
 
         private bool IsSetUseAzureSignalr()
         {
             return !string.IsNullOrEmpty(Configuration["UseAzureSignalR"]) && bool.Parse(Configuration["UseAzureSignalR"].Trim());
         }
-
-        //#region Echo
-        //private async Task Echo(HttpContext context, WebSocket webSocket)
-        //{
-        //    var buffer = new byte[1024 * 4];
-        //    WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
-        //    while (!result.CloseStatus.HasValue)
-        //    {
-        //        var receiveStr = GetReadableString(buffer);
-
-        //        var structedBuffer = new MyStructedLog() { Buffer = receiveStr };
-        //        _logger.LogInformation("buffer= {@1}", structedBuffer);
-
-        //        var sendStr = $"{{\"recv\": \"{receiveStr}\"}}";
-        //        var sendBuffer = StringToByteArray(sendStr);
-
-        //        await webSocket.SendAsync(new ArraySegment<byte>(sendBuffer, 0, sendBuffer.Count()), result.MessageType, true, CancellationToken.None);
-
-        //        result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-        //    }
-        //    await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
-        //}
-        //#endregion
-
-        //private string GetReadableString(byte[] buffer)
-        //{
-        //    var nullStart = Array.IndexOf(buffer, (byte)0);
-        //    nullStart = (nullStart == -1) ? buffer.Length : nullStart;
-        //    var ret = Encoding.Default.GetString(buffer, 0, nullStart);
-        //    return ret;
-        //}
-
-        //private byte[] StringToByteArray(string source)
-        //{
-        //    return Encoding.Default.GetBytes(source);
-        //}
     }
 }

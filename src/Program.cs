@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Serilog;
 using System;
 using System.IO;
+using Microsoft.Extensions.Hosting;
 
 namespace EchoApp
 {
@@ -21,13 +22,12 @@ namespace EchoApp
                 var aiKey = GetAzureApplicationInsightKey();
                 if (!string.IsNullOrEmpty(aiKey))
                 {
-                    logConfig.WriteTo.ApplicationInsightsTraces(aiKey);
+                    logConfig.WriteTo.ApplicationInsights(aiKey, TelemetryConverter.Traces);
                 }
 
-                Log.Logger = logConfig
-                        .Enrich.FromLogContext().CreateLogger();
+                Log.Logger = logConfig.Enrich.FromLogContext().CreateLogger();
 
-                IWebHost host = CreateWebHostBuilder(args).Build();
+                var host = CreateWebHostBuilder(args).Build();
 
                 host.Run();
             }
@@ -38,23 +38,13 @@ namespace EchoApp
 
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
-        {
-            var builder = WebHost.CreateDefaultBuilder(args);
-
-            var aiKey = GetAzureApplicationInsightKey();
-            if (!string.IsNullOrEmpty(aiKey))
-            {
-                builder = builder.UseApplicationInsights();
-            }
-
-            return builder.UseKestrel()
-                          .UseContentRoot(Directory.GetCurrentDirectory())
-                          .UseIISIntegration()
-                          .UseSerilog()
-                          .UseStartup<Startup>();
-        }
-
+        public static IHostBuilder CreateWebHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseSerilog();
+                });
 
         private static string GetAzureApplicationInsightKey() =>
          Environment.GetEnvironmentVariable("APPINSIGHTS_INSTRUMENTATIONKEY");
