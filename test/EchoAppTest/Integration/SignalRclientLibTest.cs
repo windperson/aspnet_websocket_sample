@@ -21,45 +21,40 @@ namespace EchoAppTest.Integration
 
         private const string _url = "http://localhost/ws";
 
-        private readonly WebSocketClient _webSocketClient;
-        private readonly HttpClient _httpClient;
 
-        public SignalRclientLibTest(WebApplicationFactory<Startup> factory, ITestOutputHelper testOutputHelper)
+        public SignalRclientLibTest(ITestOutputHelper testOutputHelper)
         {
             _output = new LoggerConfiguration()
                 .MinimumLevel.Verbose()
                 .WriteTo.TestOutput(testOutputHelper)
                 .CreateLogger();
-
-            _httpClient = factory.CreateClient();
-            _webSocketClient = factory.Server.CreateWebSocketClient();
         }
 
-        // NOTE: Cannot do test due to  https://github.com/aspnet/SignalR/issues/1595
-        [Fact(Skip = "SignalR C# Client not support TestHost yet.")]
+        // NOTE: When testing signalR, we cannot run test on websocket client of TestHost due to this:
+        // https://github.com/aspnet/SignalR/issues/1595
+        // Use another way to build hub connection:
+        // https://lurumad.github.io/integration-tests-in-aspnet-core-signalr
+        [Fact]
         public async Task TestServerHubInvocation()
         {
             //Arrange
             const string helloStr = "Hello SignalR";
-            HubConnection hubConnection = new HubConnectionBuilder()
-                .WithUrl(_url, HttpTransportType.WebSockets, options =>
-                      {
-                          options.WebSocketConfiguration = socketOptions =>
-                              {
-                                  socketOptions.UseDefaultCredentials = true;
-                              };
-
-                      })
+            var webHostBuilder = WebHost.CreateDefaultBuilder().UseStartup<Startup>();
+            var testServer = new TestServer(webHostBuilder);
+            var hubConnection = new HubConnectionBuilder()
+                .WithUrl(_url, o => 
+                    o.HttpMessageHandlerFactory = _ => testServer.CreateHandler())
                 .ConfigureLogging(
                     builder =>
                     {
                         builder.AddSerilog(_output);
                     }).Build();
 
+            //Act
             await hubConnection.StartAsync().OrTimeout();
-
             var recvStr = await hubConnection.InvokeCoreAsync<string>("EchoWithJsonFormat", new object[] { helloStr }).OrTimeout();
 
+            //Assert
             Assert.Equal($"{{\"recv\": \"{helloStr}\"}}", recvStr);
         }
 

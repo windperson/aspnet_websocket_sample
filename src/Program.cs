@@ -27,7 +27,7 @@ namespace EchoApp
 
                 Log.Logger = logConfig.Enrich.FromLogContext().CreateLogger();
 
-                var host = CreateWebHostBuilder(args).Build();
+                var host = CreateHostBuilder(args).Build();
 
                 host.Run();
             }
@@ -38,7 +38,7 @@ namespace EchoApp
 
         }
 
-        public static IHostBuilder CreateWebHostBuilder(string[] args) =>
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
